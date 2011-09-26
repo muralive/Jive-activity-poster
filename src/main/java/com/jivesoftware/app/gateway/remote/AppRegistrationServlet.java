@@ -25,8 +25,9 @@ public class AppRegistrationServlet extends HttpServlet {
             String appUUID = validate(req.getParameter("opensocial_app_id"), "The request must be OAuth signed for app registration to succeed.");
             long userID = NumberUtils.toLong(validate(parseUserID(req.getParameter("opensocial_owner_id")), ""), -1);
             String instanceUUID = validate(parseInstanceID(req.getParameter("opensocial_owner_id")), "");
+            logger.info("eventtype: " + eventType);
 
-            if ("added".equals(eventType)) {
+            if ("addapp".equals(eventType)) {
                 logger.info("Received add registration - AppUUID=" + appUUID + ", userID=" + userID + ", " +
                         "instanceUUID=" + instanceUUID);
                 ValidateAndPushServlet.add(Long.valueOf(userID), instanceUUID, appUUID);
