@@ -72,14 +72,30 @@ public class ValidateAndPushServlet extends HttpServlet {
         // verify that the appID, userID and instanceID are set
         long uid = 0;
         String jiveId = "", appId = "";
-        if(req.getParameter("uid") != null) uid = Long.valueOf(req.getParameter("uid"));
+        String consumerKey = req.getParameter("consumerKey");
+        String consumerSecret = req.getParameter("consumerSecret");
+
+        try {
+            if(req.getParameter("uid") != null) uid = Long.valueOf(req.getParameter("uid"));
+        }
+        catch(NumberFormatException nfe) {
+            resp.setHeader("X-Error-Message", "URL parameter uid must be set to a valid user id");
+            resp.sendError(400);
+        }
         if(uid > 0) {
             JiveAppPair jiveAppPair = ids.get(uid);
             if(jiveAppPair != null) {
                 jiveId = jiveAppPair.getJiveId();
                 appId = jiveAppPair.getAppId();
             }
-            else uid = 0;
+            else
+            {
+                // build the appid from consumer key & use app-sandbox's jive id
+                jiveId = "99b3427b-202e-4891-a50e-1fb5e7b173be";
+                if(consumerKey != null && consumerKey.length() == 32) {
+                    appId = consumerKey.substring(0, 8) + '-' + consumerKey.substring(8, 12) + '-' + consumerKey.substring(12, 16) + '-' + consumerKey.substring(16, 20) + '-' + consumerKey.substring(20);
+                }
+            }
         }
         else if(ids.keySet().size() > 0) {
             Map.Entry<Long, JiveAppPair> firstOne = ids.entrySet().iterator().next();
@@ -100,8 +116,6 @@ public class ValidateAndPushServlet extends HttpServlet {
         logger.info(String.format("Posting to: user id: %d, Jive Id: %s, App Id: %s", uid, jiveId, appId));
         // retrieve post form fields. We're just going to assume that the fields have been
         // null tested already by the javascript in the form
-        String consumerKey = req.getParameter("consumerKey");
-        String consumerSecret = req.getParameter("consumerSecret");
         int targetType = NumberUtils.toInt(req.getParameter("targetType"), 0);
         String json = req.getParameter("json");
 
